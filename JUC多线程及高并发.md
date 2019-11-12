@@ -472,7 +472,7 @@ false	 current data is 2019
 
 #### 3、CAS缺点
 
-1. ** 循环时间长，开销大**
+1. **循环时间长，开销大**
 
    例如getAndAddInt方法执行，有个do while循环，如果CAS失败，一直会进行尝试，如果CAS长时间不成功，可能会给CPU带来很大的开销
 
@@ -481,6 +481,10 @@ false	 current data is 2019
    对多个共享变量操作时，循环CAS就无法保证操作的原子性，这个时候就可以用锁来保证原子性
 
 3. **ABA问题**
+
+#### 4、为什么用cas不用synchronized
+
+sync作为独占锁开销比较大，在同一时间只允许单一线程进行访问。而cas作为在同一时间可以接受多个线程同时访问，既保证一致性，也保证了并发性。
 
 ### 三、原子类AtomicInteger的ABA问题？原子更新引用？
 
@@ -585,7 +589,7 @@ public class ABADemo {
             atomicStampedReference.compareAndSet(100, 101, atomicStampedReference.getStamp(), atomicStampedReference.getStamp() + 1);
             System.out.println(Thread.currentThread().getName() + "\t第2次版本号" + atomicStampedReference.getStamp());
             atomicStampedReference.compareAndSet(101, 100, atomicStampedReference.getStamp(), atomicStampedReference.getStamp() + 1);
-            System.out.println(Thread.currentThread().getName() + "\t第3次版本号" + atomicStampedReference.getStamp());
+            System.out .println(Thread.currentThread().getName() + "\t第3次版本号" + atomicStampedReference.getStamp());
         }, "Thread 3").start();
 
         new Thread(() -> {
@@ -621,6 +625,8 @@ Thread 4	当前最新实际值：100
 ```
 
 ### 四、我们知道ArrayList是线程不安全的，请编写一个不安全的案例并给出解决方案
+
+ArrayList初始值10，超过10 扩容变成1.5倍
 
 HashSet与ArrayList一致 HashMap
 
@@ -663,6 +669,8 @@ public class ContainerNotSafeDemo {
 
 报错：
 
+快速失败
+
 ```java
 Exception in thread "Thread 10" java.util.ConcurrentModificationException
 ```
@@ -673,20 +681,21 @@ Exception in thread "Thread 10" java.util.ConcurrentModificationException
 
 一个人正在写入，另一个同学来抢夺，导致数据不一致，并发修改异常
 
-#### 3、解决方法：**CopyOnWriteArrayList
+Vector可以解决但是却应用了加锁的原理，性能下降
 
-```
+#### 3、解决方法：**CopyOnWriteArrayList**，**vector**，**辅助工具类Collections**
+
+```java
 List<String> list = new Vector<>();//Vector线程安全
 List<String> list = Collections.synchronizedList(new ArrayList<>());//使用辅助类
 List<String> list = new CopyOnWriteArrayList<>();//写时复制，读写分离
-
 Map<String, String> map = new ConcurrentHashMap<>();
 Map<String, String> map = Collections.synchronizedMap(new HashMap<>());
 ```
 
-CopyOnWriteArrayList.add方法：
+**CopyOnWriteArrayList.add方法：**
 
-CopyOnWrite容器即写时复制，往一个元素添加容器的时候，不直接往当前容器Object[]添加，而是先将当前容器Object[]进行copy，复制出一个新的容器Object[] newElements，让后新的容器添加元素，添加完元素之后，再将原容器的引用指向新的容器setArray(newElements),这样做可以对CopyOnWrite容器进行并发的读，而不需要加锁，因为当前容器不会添加任何元素，所以CopyOnWrite容器也是一种读写分离的思想，读和写不同的容器
+CopyOnWrite容器即写时复制，往一个元素添加容器的时候，不直接往当前容器Object[]添加，而是先将当前容器Object[]进行copy，复制出一个新的容器Object[] newElements，让后新的容器添加元素，添加完元素之后，再将原容器的引用指向新的容器setArray(newElements),这样做可以对CopyOnWrite容器进行并发的读，而不需要加锁，因为当前容器不会添加任何元素，所以CopyOnWrite容器也是一种**读写分离**的思想，读和写不同的容器
 
 ```java
 	public boolean add(E e) {
@@ -705,7 +714,15 @@ CopyOnWrite容器即写时复制，往一个元素添加容器的时候，不直
     }
 ```
 
+hashset的线程安全类是CopyOnWriteArraySet 但是底层仍然是用了CopyOnWriteArrayList。
 
+#### 5.hashSet底层
+
+hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，添加的key为传入值，value为Object类型的固定对象。
+
+#### 6.hashmap的线程安全
+
+用concurrentHashmap
 
 ### 五、公平锁、非公平锁、可重入锁、递归锁、自旋锁？手写自旋锁
 
@@ -731,7 +748,7 @@ CopyOnWrite容器即写时复制，往一个元素添加容器的时候，不直
 
 3. **other**
 
-   对Java ReentrantLock而言，通过构造函数指定该锁是否公平，磨粉是非公平锁，非公平锁的优点在于吞吐量比公平锁大
+   对Java ReentrantLock而言，通过构造函数指定该锁是否公平，默认是非公平锁，非公平锁的优点在于吞吐量比公平锁大
 
    对Synchronized而言，是一种非公平锁
 
@@ -739,7 +756,7 @@ CopyOnWrite容器即写时复制，往一个元素添加容器的时候，不直
 
 1. **递归锁是什么**
 
-   指的时同一线程外层函数获得锁之后，内层递归函数仍然能获取该锁的代码，在同一个线程在外层方法获取锁的时候，在进入内层方法会自动获取锁，也就是说，==线程可以进入任何一个它已经拥有的锁所同步着的代码块==
+   指的时同一线程外层函数获得锁之后，内层递归函数仍然能获取该2锁的代码，在同一个线程在外层方法获取锁的时候，在进入内层方法会自动获取锁，也就是说，==线程可以进入任何一个它已经拥有的锁所同步着的代码块==
 
 2. **ReentrantLock/Synchronized 就是一个典型的可重入锁**
 
