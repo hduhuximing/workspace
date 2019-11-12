@@ -1003,7 +1003,6 @@ hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，�
            Thread thread = Thread.currentThread();
            System.out.println(Thread.currentThread().getName() + "\t come in");
            while (!atomicReference.compareAndSet(null, thread)) {
-   
            }
        }
    
@@ -1015,6 +1014,10 @@ hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，�
    }
    
    ```
+
+#### 5.读写锁
+
+读锁共享，写锁独占
 
 ### 六、CountDownLatch/CyclicBarrier/Semaphore使用过吗
 
