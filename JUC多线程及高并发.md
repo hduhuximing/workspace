@@ -1153,9 +1153,9 @@ hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，�
 
 ### 七、阻塞队列
 
-- **==ArrayBlockingQueue==**是一个基于数组结构的有界阻塞队列，此队列按FIFO原则对元素进行排序
-- **==LinkedBlockingQueue==**是一个基于链表结构的阻塞队列，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue
-- **==SynchronousQueue==**是一个不存储元素的阻塞队列，灭个插入操作必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于
+- **==ArrayBlockingQueue==**是一个基于数组结构的有界阻塞队列，此队列按FIFO原则对元素进行排序，数组组成的有界阻塞队列
+- **==LinkedBlockingQueue==**是一个基于链表结构的阻塞队列，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue，链表结构组成的有界（默认Integer.MAX_VALUE）阻塞队列
+- **==SynchronousQueue==**是一个不存储元素的阻塞队列，每个插入操作必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于Link。单个元素的阻塞队列
 
 #### 1、队列和阻塞队列
 
@@ -1175,15 +1175,15 @@ hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，�
    id2--"取(柜空阻塞)"-->顾客
    ```
 
-   线程1往阻塞队列中添加元素，而线程2从阻塞队列中移除元素
+   线程1往阻塞队列中添加元素，而线程2从阻塞队列中移除元素。
 
-   当阻塞队列是空是，从队列中==获取==元素的操作会被阻塞
+   当阻塞队列是空是，从队列中==获取==元素的操作会被阻塞。
 
-   当阻塞队列是满时，从队列中==添加==元素的操作会被阻塞
+   当阻塞队列是满时，从队列中==添加==元素的操作会被阻塞。
 
-   试图从空的阻塞队列中获取元素的线程将会被阻塞，知道其他的线程网空的队列插入新的元素。
+   试图从空的阻塞队列中获取元素的线程将会被阻塞，直到其他的线程像空的队列插入新的元素。
 
-   试图网已满的阻塞队列中添加新元素的线程同样会被阻塞，知道其他的线程从列中移除一个或者多个元素或者完全清空队列后使队列重新变得空闲起来并后续新增
+   试图网已满的阻塞队列中添加新元素的线程同样会被阻塞，直到其他的线程从列中移除一个或者多个元素或者完全清空队列后使队列重新变得空闲起来并后续新增。
 
 #### 2、为什么用？有什么好处？
 
@@ -1432,7 +1432,7 @@ hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，�
      class MyResource {
          private volatile boolean flag = true;//默认开启，进行生产+消费
          private AtomicInteger atomicInteger = new AtomicInteger();
-     
+      
          BlockingQueue<String> blockingQueue = null;
      
          public MyResource(BlockingQueue<String> blockingQueue) {
@@ -1490,7 +1490,7 @@ hashSet底层hashmap，在用add方法的时候，底层调用hashmap的add，�
 
    - synchronized时关键字属于jvm
 
-     **monitorenter**，底层是通过monitor对象来完成，其实wait/notify等方法也依赖于monitor对象只有在同步或方法中才能掉wait/notify等方法
+     **monitorenter**，底层是通过monitor对象来完成，其实wait/notify等方法也依赖于monitor对象只有在同步或方法中才能调用wait/notify等方法
 
      **monitorexit**
 
@@ -1721,7 +1721,7 @@ class MyThread2 implements Callable<Integer> {
 
      **执行长期的任务，性能好很多**
 
-     创建一个定长线程池，可控制线程最大并发数，炒出的线程回在队列中等待。
+     创建一个定长线程池，可控制线程最大并发数，超出的线程回在队列中等待。
 
      newFixedThreadPool创建的线程池corePoolSize和maximumPoolSize值是想到等的，他使用的是LinkedBlockingQueue
 
@@ -1745,7 +1745,7 @@ class MyThread2 implements Callable<Integer> {
 
 #### 4、线程池的几个重要参数介绍
 
-```
+```java
 public ThreadPoolExecutor(int corePoolSize,
                           int maximumPoolSize,
                           long keepAliveTime,
@@ -1758,7 +1758,7 @@ public ThreadPoolExecutor(int corePoolSize,
 1. **==corePoolSize==**：线程池中常驻核心线程数
    - 在创建了线程池后，当有请求任务来之后，就会安排池中的线程去执行请求任务
    - 当线程池的线程数达到corePoolSize后，就会把到达的任务放到缓存队列当中
-2. **==maximumPoolSize==**：线程池能够容纳同时执行的最大线程数，必须大于等于1
+2. **==maximumPoolSize==**：线程池能够容纳同时执行的最大线程数
 3. **==keepAliveTime==**：多余的空闲线程的存活时间
    - 当前线程池数量超过corePoolSize时，档口空闲时间达到keepAliveTime值时，多余空闲线程会被销毁到只剩下corePoolSize个线程为止
 4. **==unit==**：keepAliveTime的单位
@@ -1822,7 +1822,9 @@ end
 
    - CallerRunsPolicy
 
-     ”调用者运行“一种调节机制，该策略既不会抛弃任务，也不会抛出异常，而是将某些任务回退到调用者，从而降低新任务的流量
+     ”调用者运行“一种调节机制，该策略既不会抛弃任务，也不会抛出异常，而是将某些任务回退到调用者，从而降低新任务的流量 
+
+     下面两个Oldest是抛弃等待时间最久的任务，另一个是抛弃当前传入的任务
 
    - DiscardOldestPolicy
 
@@ -1989,4 +1991,4 @@ public class MyThreadPoolDemo {
 4. 解决
 
    1. 使用`jps -l`定位进程号
-   2. `jstack 进程号`找到死锁查看
+   2. `jstack 进程号`找到死锁查看 
