@@ -377,7 +377,7 @@ java允许使用finalize()方法在垃圾收集器将对象从内存中清除出
 
 ![image-20191122094301666](C:\software\learn\markdown\JVM面试.assets\image-20191122094301666.png)
 
-![image-20191122094419112](C:\software\learn\markdown\JVM面试.assets\image-20191122094419112.png)
+![image-20191122094419112](/Users/huximing/IdeaProjects/ziliao/workspace/JVM面试.assets/image-20191122094301666.png)
 
 ![image-20191122104115777](C:\software\learn\markdown\JVM面试.assets\image-20191122104115777.png)
 
